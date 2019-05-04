@@ -1,10 +1,12 @@
 // import ApolloClient from "apollo-boost";
 import { ApolloClient } from 'apollo-client';
+import { ApolloLink } from 'apollo-link';
 import { split } from 'apollo-link';
 import { HttpLink } from 'apollo-link-http';
 import { WebSocketLink } from 'apollo-link-ws';
 import { getMainDefinition } from 'apollo-utilities';
 import { InMemoryCache } from 'apollo-cache-inmemory';
+import { RetryLink } from "apollo-link-retry";
 
 const PORT = '3000';
 
@@ -33,7 +35,7 @@ const link = split(
     );
   },
   wsLink,
-  httpLink,
+  ApolloLink.from([new RetryLink(), httpLink,])
 );
 
 export const client = new ApolloClient({

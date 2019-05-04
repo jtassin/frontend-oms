@@ -3,9 +3,8 @@ import 'graphiql/graphiql.css'
 import { ApolloProvider } from "react-apollo";
 import { client } from './client'
 import { gql } from "apollo-boost";
-import { Mutation, Query } from "react-apollo";
-import ToPrepare from './ToPrepare';
-import SocketState from './SocketState';
+import { Mutation } from "react-apollo";
+import PseudoLivequery from './PseudoLiveQuery';
 
 const LIST_ORDER_PRODUCTS = gql`
   query listOrderProducts {
@@ -35,8 +34,6 @@ const ADD_ORDER_PRODUCT = gql`
 `;
 
 const AddOrderProductBoucherie = () => {
-  let input;
-
   return (
     <Mutation mutation={ADD_ORDER_PRODUCT}>
       {(add, { data }) => (
@@ -65,35 +62,19 @@ function App() {
         <div style={{ display: 'block', width: '100%', height: '100%' }}>
           <div style={{ display: 'block', float: 'left', width: '400px' }}>
             produits a preparer
-          <Query
-              query={LIST_ORDER_PRODUCTS}
-            // variables={{ repoName: `${params.org}/${params.repoName}` }}
-            >
-              {({ subscribeToMore, ...result }) => (
-                <ToPrepare
-                  {...result}
-                  subscribeToNewProductOrder={() =>
-                    subscribeToMore({
-                      document: NEW_ORDER_PRODUCT,
-                      // variables: { repoName: params.repoName },
-                      updateQuery: (prev, { subscriptionData }) => {
-                        if (!subscriptionData.data) return prev;
-                        const newOrderProduct = subscriptionData.data.newOrderProduct;
-
-                        return Object.assign({}, prev, {
-                          listOrderProducts: [newOrderProduct, ...prev.listOrderProducts]
-                        });
-                      }
-                    })
-                  }
-                />
-              )}
-            </Query>
+          <PseudoLivequery query={LIST_ORDER_PRODUCTS} subscription={NEW_ORDER_PRODUCT} updateQuery={(prev, { subscriptionData }) => {
+              prev.listOrderProducts.unshift(subscriptionData.data.newOrderProduct)
+            }}>
+              {(props) => {
+                return <table><tbody>{props.data.listOrderProducts.map((orderProduct) => {
+                  return <tr key={orderProduct.id}><td>{orderProduct.id}</td><td>{orderProduct.state}</td></tr>
+                })}</tbody></table>
+              }}
+            </PseudoLivequery>
           </div>
           <div style={{ display: 'block', float: 'left', width: '400px' }}>
             <AddOrderProductBoucherie />
           </div>
-          <div style={{ display: 'block', float: 'left', width: '400px' }}><SocketState /></div>
         </div>
       </div>
     </ApolloProvider>
