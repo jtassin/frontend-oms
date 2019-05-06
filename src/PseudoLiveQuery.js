@@ -16,17 +16,18 @@ class RefetchOnWebSocketLoss extends React.Component {
   constructor() {
     super()
     this.state = {
-        status: wsLink.subscriptionClient.status,
-        refetch: false,
+      status: wsLink.subscriptionClient.status,
+      refetch: false,
     }
-}
+  }
 
   componentDidMount() {
     this.interval = setInterval(() => {
-      this.setState({ status: wsLink.subscriptionClient.status })
+      if (this.state.status !== wsLink.subscriptionClient.status) {
+        this.setState({ status: wsLink.subscriptionClient.status })
+      }
     }, 1000)
     wsLink.subscriptionClient.on('reconnected', () => {
-      console.log('reconnected')
       this.setState({ refetch: true })
       this.props.refetch().then(() => {
         this.setState({ refetch: false })
@@ -35,20 +36,20 @@ class RefetchOnWebSocketLoss extends React.Component {
   }
 
   componentWillUnmount() {
-    this.interval()
+    clearInterval(this.interval);
   }
 
   render() {
     let borderColor = 'red';
     let text = 'offline'
-    if(this.state.refetch) {
+    if (this.state.refetch) {
       text = 'Resync'
       borderColor = 'orange';
     } else {
-      if(this.state.status === 1) {
+      if (this.state.status === 1) {
         text = 'online'
         borderColor = 'green';
-      } else if(this.state.status === 0) {
+      } else if (this.state.status === 0) {
         text = 'pending'
         borderColor = 'orange';
       }
@@ -57,10 +58,10 @@ class RefetchOnWebSocketLoss extends React.Component {
       border: `solid 1px ${borderColor}`
     }
     return <div style={style}>
-    <div style={{width: '100%', backgroundColor: borderColor, textAlign: 'center', color: 'white'}}>
-      {text}
-    </div>
-    {this.props.children}
+      <div style={{ width: '100%', backgroundColor: borderColor, textAlign: 'center', color: 'white' }}>
+        {text}
+      </div>
+      {this.props.children}
     </div>;
   }
 }
@@ -68,7 +69,7 @@ class RefetchOnWebSocketLoss extends React.Component {
 export default class PseudoLivequery extends React.Component {
   render() {
     return <Query
-      pollInterval={60e3}
+      pollInterval={10*60e3}
       query={this.props.query}
     //   variables={{ repoName: `${params.org}/${params.repoName}` }}
     >

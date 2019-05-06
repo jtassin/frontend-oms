@@ -12,34 +12,42 @@ const PORT = '3000';
 
 // Create an http link:
 const httpLink = new HttpLink({
-  uri: `http://localhost:${PORT}/graphql`
+    uri: `http://localhost:${PORT}/graphql`
 });
 
 // Create a WebSocket link:
 export const wsLink = new WebSocketLink({
-  uri: `ws://localhost:5001/graphql`,
-  options: {
-    reconnect: true
-  }
+    uri: `ws://localhost:5001/graphql`,
+    options: {
+        reconnect: true
+    }
 });
 
 // using the ability to split links, you can send data to each link
 // depending on what kind of operation is being sent
 const link = split(
-  // split based on operation type
-  ({ query }) => {
-    const definition = getMainDefinition(query);
-    return (
-      definition.kind === 'OperationDefinition' &&
-      definition.operation === 'subscription'
-    );
-  },
-  wsLink,
-  ApolloLink.from([new RetryLink(), httpLink,])
+    // split based on operation type
+    ({ query }) => {
+        const definition = getMainDefinition(query);
+        return (
+            definition.kind === 'OperationDefinition' &&
+            definition.operation === 'subscription'
+        );
+    },
+    wsLink,
+    ApolloLink.from([new RetryLink({
+        delay: {
+            initial: 300,
+            max: Infinity,
+            jitter: true
+        }, attempts: {
+            max: 25,
+        }
+    }), httpLink,])
 );
 
 export const client = new ApolloClient({
-//   uri: `http://localhost:${PORT}/graphql`,
-  link,
-  cache: new InMemoryCache()
+    //   uri: `http://localhost:${PORT}/graphql`,
+    link,
+    cache: new InMemoryCache()
 });
