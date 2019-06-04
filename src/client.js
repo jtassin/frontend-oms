@@ -8,7 +8,7 @@ import { getMainDefinition } from 'apollo-utilities';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { RetryLink } from "apollo-link-retry";
 
-const PORT = '3000';
+const PORT = '4000';
 
 // Create an http link:
 const httpLink = new HttpLink({
@@ -17,7 +17,7 @@ const httpLink = new HttpLink({
 
 // Create a WebSocket link:
 export const wsLink = new WebSocketLink({
-    uri: `ws://localhost:5001/graphql`,
+    uri: `ws://localhost:4001/graphql`,
     options: {
         reconnect: true
     }
